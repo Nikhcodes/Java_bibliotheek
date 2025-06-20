@@ -29,8 +29,7 @@ public class UitlenenService {
             String cbbId = scanner.nextLine();
             System.out.print("Geboortedatum (YYYY-MM-DD): ");
             LocalDate geboortedatum = LocalDate.parse(scanner.nextLine());
-            lid = new Lid(0, naam, cbbId, geboortedatum);
-            lid = lidDAO.zoekOfVoegToe(naam, cbbId, geboortedatum);
+            lid = lidDAO.voegNieuwLidToe(new Lid(0, naam, cbbId, geboortedatum));
             System.out.println("Nieuw lid toegevoegd met Bibnummer: " + lid.getBibnummer());
         }
 
@@ -38,26 +37,31 @@ public class UitlenenService {
         int duur = Integer.parseInt(scanner.nextLine());
 
         int kwitantienummer = kwitantieDAO.maakNieuweKwitantie(lid.getBibnummer(), duur);
+        if (kwitantienummer == -1) {
+            System.out.println("Fout bij aanmaken kwitantie.");
+            return;
+        }
 
         while (true) {
-            System.out.print("Voer ISBN in (of leeg om te stoppen): ");
+            toonBoeken();
+            System.out.print("Voer ISBN in van het boek om uit te lenen (of leeg om te stoppen): ");
             String isbn = scanner.nextLine().trim();
             if (isbn.isEmpty()) break;
 
             Boek boek = boekDAO.getBoekByIsbn(isbn);
             if (boek == null) {
-                System.out.println("Boek niet gevonden.");
+                System.out.println("❗ Boek niet gevonden.");
                 continue;
             }
 
             if (!boek.isBeschikbaar()) {
-                System.out.println("Boek is al uitgeleend.");
+                System.out.println("❗ Boek is al uitgeleend.");
                 continue;
             }
 
             if (koppelingDAO.koppelBoekAanKwitantie(kwitantienummer, isbn)) {
                 boekDAO.updateBeschikbaarheid(isbn, false);
-                System.out.println("Boek uitgeleend: " + boek.getTitel());
+                System.out.println("✅ Boek uitgeleend: " + boek.getTitel());
             }
         }
     }
@@ -69,29 +73,27 @@ public class UitlenenService {
         System.out.print("Voer ISBN van boek in: ");
         String isbn = scanner.nextLine().trim();
 
-        Boek boek = boekDAO.getBoekByIsbn(isbn);
-        if (boek == null) {
-            System.out.println("Boek niet gevonden.");
-            return;
-        }
-
-        LeenKwitantie laatste = kwitantieDAO.getLaatsteKwitantieVoorLid(lidnummer);
-        if (laatste == null) {
-            System.out.println("Geen kwitantie gevonden.");
-            return;
-        }
-
         System.out.print("Inleverdatum (YYYY-MM-DD): ");
         LocalDate inleverdatum = LocalDate.parse(scanner.nextLine());
 
-        System.out.print("Opmerkingen: ");
+        System.out.print("Opmerkingen (optioneel): ");
         String opmerkingen = scanner.nextLine();
 
-        if (kwitantieDAO.registreerInlevering(laatste.getKwitantienummer(), inleverdatum, opmerkingen)) {
+        // Voorbeeld: direct laatste kwitantie zoeken is optioneel uit te breiden
+        if (kwitantieDAO.registreerInleveringVoorBoek(lidnummer, isbn, inleverdatum, opmerkingen)) {
             boekDAO.updateBeschikbaarheid(isbn, true);
-            System.out.println("Boek succesvol ingeleverd.");
+            System.out.println("✅ Boek succesvol ingeleverd.");
         } else {
-            System.out.println("Inleveren mislukt.");
+            System.out.println("❗ Inleveren mislukt.");
+        }
+    }
+
+    private void toonBoeken() {
+        List<Boek> boeken = boekDAO.getAlleBoeken();
+        System.out.println("\n--- Boeken overzicht ---");
+        for (Boek b : boeken) {
+            System.out.printf("%s | %s | %s%n", b.getIsbn(), b.getTitel(),
+                    b.isBeschikbaar() ? "✅ beschikbaar" : "❌ uitgeleend");
         }
     }
 }

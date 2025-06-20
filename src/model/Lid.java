@@ -28,9 +28,4 @@ public class Lid {
 
         public LocalDate getGeboortedatum() { return geboortedatum; }
         public void setGeboortedatum(LocalDate geboortedatum) { this.geboortedatum = geboortedatum; }
-
-        @Override
-        public String toString() {
-                return bibnummer + " - " + naam + " (CBB-ID: " + cbbId + ")";
-        }
 }
