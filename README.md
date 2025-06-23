@@ -38,7 +38,7 @@
 ### 📁 Project clonen
 1. Open IntelliJ IDEA
 2. Kies: File > New > Project from Version Control > Git
-3. Repo-URL: https:/https://github.com/Nikhcodes/Java_bibliotheek/blob/59e46af4924d69b487c8333c27963d9a983d2b3e/README.md#L41/github.com/Nikhcodes/BiblioApp-Java.git
+3. Repo-URL: https://github.com/Nikhcodes/Java_bibliotheek.git
 4. Kies opslaglocatie en klik op "Clone"
 
 ## 🗄️ Database instellen
